@@ -1,5 +1,6 @@
 local M = {}
 require("debugmaster.lib.utils")
+require("debugmaster.lsp")
 
 M.cfg = require("debugmaster.cfg")
 

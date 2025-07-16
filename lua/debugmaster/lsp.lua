@@ -15,10 +15,25 @@ local function server(dispatchers)
   -- the payloads you'll need to read the specification:
   -- https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/
   function srv.request(method, params, callback)
-    if method == 'initialize' then
-      callback(nil, { capabilities = {} })
-    elseif method == 'shutdown' then
+    if method == "initialize" then
+      callback(nil, {
+        capabilities = {
+          completionProvider = {
+            triggerCharacters = { ".", "a", "b", "c" }
+          },
+        },
+      })
+    elseif method == "shutdown" then
       callback(nil, nil)
+    elseif method == "textDocument/completion" then
+      callback(nil, {
+          {
+            label = "something",
+            kind = 3,
+            detail = "Built-in function",
+            insertText = "something()",
+          }
+      })
     end
     return true, 1
   end
@@ -26,7 +41,7 @@ local function server(dispatchers)
   -- This method is called each time the client sends a notification to the server
   -- The difference between `request` and `notify` is that notifications don't expect a response
   function srv.notify(method, params)
-    if method == 'exit' then
+    if method == "exit" then
       dispatchers.on_exit(0, 15)
     end
   end
@@ -44,4 +59,8 @@ local function server(dispatchers)
   return srv
 end
 
-vim.lsp.start({ name = 'my-server', cmd = server })
+vim.api.nvim_create_autocmd("BufRead", {
+  callback = function(args)
+    vim.lsp.start({ name = "debugmaster", cmd = server })
+  end
+})

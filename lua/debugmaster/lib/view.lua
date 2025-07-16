@@ -69,10 +69,10 @@ end
 function view.close_on_leave(win)
   api.nvim_create_autocmd("WinLeave", {
     callback = function()
-      if api.nvim_win_is_valid(win) then
+      if api.nvim_get_current_win() == win then
         api.nvim_win_close(win, true)
+        return true
       end
-      return true
     end
   })
   return win

@@ -4,6 +4,7 @@ local SessionWidget = require("debugmaster.widgets.SessionWidget")
 local ui = require("debugmaster.lib.ui")
 local common = require("debugmaster.widgets.common")
 local VariableWidget = require("debugmaster.widgets.VariableWidget")
+local view = require("debugmaster.lib.view")
 local after = dap.listeners.after
 local SessionsManager = require("debugmaster.managers.SessionsManager")
 local api = vim.api
@@ -209,6 +210,10 @@ UiManager.sidepanel = require("debugmaster.widgets.multiwin").new()
 
 UiManager.repl = (function()
   local canvas = ui.Canvas.new()
+  local repl = {
+    prompt_buf = api.nvim_create_buf(false, true)
+  }
+
   canvas:add_key_events({ "K", "<CR>" })
   after.event_output[events_id] = function(session, body)
     canvas:push {
@@ -229,16 +234,30 @@ UiManager.repl = (function()
 
   api.nvim_buf_set_keymap(canvas.buf, "n", "i", "", {
     callback = function()
-      vim.ui.input({ prompt = "Enter repl expression: " }, function(input)
-        local s = assert(dap.session())
-        ---@type dap.EvaluateArguments
-        local args = { frameId = s.current_frame.id, context = "repl", expression = input }
-        s:request("evaluate", args, function(err, res)
-          ---@type dap.Variable
-          local var = { name = input, value = res.result, variablesReference = res.variablesReference }
-          canvas:push(VariableWidget.new(s, var))
-        end)
-      end)
+
+      local win = api.nvim_open_win(repl.prompt_buf, true, {
+        relative = "cursor",
+        row = 0,
+        height = 10,
+        width = 35,
+        col = 0,
+        title = {{"Repl prompt"}},
+        title_pos = "center",
+        footer = {{"Use CR or :w to evaluate"}},
+        footer_pos = "center",
+      })
+      view.close_on_leave(win)
+      -- vim.ui.input({ prompt = "Enter repl expression: " }, function(input)
+      --   local s = assert(dap.session())
+      --   ---@type dap.EvaluateArguments
+      --   local args = { frameId = s.current_frame.id, context = "repl", expression = input }
+      --   s:request("evaluate", args, function(err, res)
+      --     ---@type dap.Variable
+      --     local var = { name = input, value = res.result, variablesReference = res.variablesReference }
+      --     canvas:push(VariableWidget.new(s, var))
+      --   end)
+      -- end)
+
     end
   })
 

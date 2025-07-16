@@ -85,6 +85,7 @@ plugins.osv_integration = {
         for _, suf in ipairs(suffixes) do
           local path = vim.api.nvim_get_runtime_file(suf, false)[1]
           if path then
+            path = vim.fs.normalize(path)
             return no_suffix and path:match("(.+)" .. suf) or path
           end
         end
